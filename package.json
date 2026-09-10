@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-tyro-camo",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Stealth asset camouflage for Laravel and Vite: cloak compiled JS/CSS bundles under deterministic, inoffensive codenames while keeping manifest.json intact.",
   "type": "module",
   "license": "MIT",
