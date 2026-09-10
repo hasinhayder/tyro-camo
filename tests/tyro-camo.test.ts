@@ -97,6 +97,30 @@ describe('wrapper', () => {
     expect(output.chunkFileNames(chunk({ name: 'vendor' }))).toMatch(/\.mjs$/);
   });
 
+  it('targets chunks for any script extension, not just "js"', () => {
+    const ts = chunk({ isEntry: true, facadeModuleId: `${process.cwd()}/resources/js/app.ts`, name: 'resources/js/app.ts' });
+
+    // Regression: `include: ['ts', 'css']` used to target nothing, leaking full source paths
+    // into filenames because a .ts source is a JavaScript chunk by the time it is named.
+    for (const include of [['js', 'css'], ['ts', 'css'], ['ts'], ['tsx'], ['vue'], ['mjs'], ['js', 'ts', 'css']]) {
+      const output = wrapOutput({}, createOptions({ include })) as any;
+      expect(output.entryFileNames(ts), `include: ${JSON.stringify(include)}`).toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\.js$/);
+    }
+
+    // Without any script extension, chunks are left alone.
+    const cssOnly = wrapOutput({}, createOptions({ include: ['css'] })) as any;
+    expect(cssOnly.entryFileNames(ts)).not.toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\.js$/);
+  });
+
+  it('targets assets by their real extension regardless of script extensions', () => {
+    const output = wrapOutput({}, createOptions({ include: ['js', 'ts', 'css'] })) as any;
+
+    expect(output.assetFileNames(asset({ name: 'app.css', originalFileName: 'resources/css/app.css' }))).toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\[extname\]$/);
+    // A stylesheet preprocessor source keeps its own extension and is only targeted when listed.
+    expect(output.assetFileNames(asset({ name: 'theme.scss', originalFileName: 'resources/css/theme.scss' }))).toBe('assets/[name]-[hash][extname]');
+    expect(output.assetFileNames(asset({ name: 'font.woff2', originalFileName: 'resources/fonts/font.woff2' }))).toBe('assets/[name]-[hash][extname]');
+  });
+
   it('matches aliases on the exact project-relative path only', () => {
     const options = createOptions({
       aliases: { 'resources/js/player.js': 'swift-tiger' },
@@ -227,6 +251,18 @@ describe('plugin lifecycle and legend generation', () => {
 
     expect(config.build.rollupOptions.output).toHaveLength(2);
     expect(typeof config.build.rollupOptions.output[0].entryFileNames).toBe('function');
+  });
+
+  it('camouflages js, ts and css with the default options', () => {
+    const config = applyConfig(tyroCamo());
+    const output = config.build.rollupOptions.output;
+
+    expect(output.entryFileNames(chunk({ isEntry: true, facadeModuleId: `${process.cwd()}/resources/js/app.ts`, name: 'resources/js/app.ts' })))
+      .toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\.js$/);
+    expect(output.entryFileNames(chunk({ isEntry: true, facadeModuleId: `${process.cwd()}/resources/js/app.js`, name: 'resources/js/app.js' })))
+      .toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\.js$/);
+    expect(output.assetFileNames(asset({ name: 'app.css', originalFileName: 'resources/css/app.css' })))
+      .toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\[extname\]$/);
   });
 
   it('emits a legend covering every camouflaged source', async () => {

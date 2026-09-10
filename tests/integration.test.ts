@@ -43,6 +43,7 @@ const runBuild = async (outDir: string, legendPath: string) => {
           'resources/js/app.js': resolve(projectRoot, 'resources/js/app.js'),
           'resources/js/player.js': resolve(projectRoot, 'resources/js/player.js'),
           'resources/js/devtools-guard.js': resolve(projectRoot, 'resources/js/devtools-guard.js'),
+          'resources/js/checks.ts': resolve(projectRoot, 'resources/js/checks.ts'),
           'resources/css/app.css': resolve(projectRoot, 'resources/css/app.css'),
         },
         output: {
@@ -80,6 +81,13 @@ beforeAll(async () => {
   await write(resolve(projectRoot, 'resources/js/heavy.js'), "export const boom = () => 'boom';\n");
   await write(resolve(projectRoot, 'resources/js/player.js'), "import { greet } from './shared.js';\nconsole.log(greet('player'));\n");
   await write(resolve(projectRoot, 'resources/js/devtools-guard.js'), 'export const guard = true;\n');
+  await write(resolve(projectRoot, 'resources/js/checks.ts'), [
+    "import { greet } from './shared.js';",
+    "import('./report.ts').then((module) => module.report());",
+    "const who: string = 'ts';",
+    'console.log(greet(who));',
+  ].join('\n'));
+  await write(resolve(projectRoot, 'resources/js/report.ts'), "export const report = (): string => 'report';\n");
   await write(resolve(projectRoot, 'resources/css/app.css'), "body { background: url('../fonts/demo.woff2'); }\n");
   // Larger than Vite's 4kb inline threshold, so it must be emitted as a real asset file.
   await write(resolve(projectRoot, 'resources/fonts/demo.woff2'), Buffer.concat([
@@ -114,6 +122,24 @@ describe('integration: real Vite build', () => {
     expect(legend['resources/js/player.js']).toBe('swift-tiger');
     expect(legend['resources/js/devtools-guard.js']).toBe('iron-fog');
     expect(Object.values(legend).some((value) => value.startsWith('['))).toBe(false);
+  });
+
+  it('camouflages TypeScript entries and their chunks with the default options', async () => {
+    const { manifest, files, legend } = await runBuild('dist', '.camo-legend.json');
+
+    // A `.ts` source is a JavaScript chunk by the time Rollup names it, so `ts` in the default
+    // include list must target it rather than silently doing nothing.
+    const entry = manifest['resources/js/checks.ts'].file as string;
+    expect(entry).toMatch(/^assets\/[a-z]+-[a-z]+-[A-Za-z0-9_-]+\.js$/);
+    expect(entry).not.toContain('checks');
+
+    // A dynamically imported `.ts` chunk is camouflaged too.
+    const dynamic = manifest['resources/js/report.ts'];
+    expect(dynamic.isDynamicEntry).toBe(true);
+    expect(dynamic.file).not.toContain('report');
+
+    expect(legend['resources/js/checks.ts']).toMatch(/^[a-z]+-[a-z]+$/);
+    expect(files.some((file) => file.includes('checks') || file.includes('report'))).toBe(false);
   });
 
   it('keeps alias, entry, shared chunk and dynamic chunk filenames free of source names', async () => {

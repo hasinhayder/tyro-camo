@@ -74,8 +74,8 @@ tyroCamo({
   // Strategy for chunks not listed in aliases: 'codename' | 'nameless' | 'preserve'
   unmappedStrategy: 'codename',
 
-  // Extensions to camouflage (defaults to ['js', 'css'])
-  include: ['js', 'css'],
+  // Extensions to camouflage (defaults to ['js', 'ts', 'css'])
+  include: ['js', 'ts', 'css'],
 
   // Custom word dictionaries to replace built-in lists
   words: {
@@ -125,7 +125,7 @@ unaffected. Disable with `tyroCamo({ discover: { enabled: false } })`.
 | `format` | `string` | `'assets/[codename]-[hash][extname]'` | Rollup output pattern with `[codename]`, `[hash]`, `[extname]`. |
 | `seed` | `string` | `undefined` | Optional deterministic seed; changing it rotates generated codenames. |
 | `unmappedStrategy` | `'codename' \| 'nameless' \| 'preserve'` | `'codename'` | Strategy for targeted files without explicit aliases. |
-| `include` | `string[]` | `['js', 'css']` | File extensions targeted for camouflaging. |
+| `include` | `string[]` | `['js', 'ts', 'css']` | Extensions to camouflage. Script extensions target JavaScript chunks; anything else targets emitted assets by their real extension. |
 | `words.adjectives` | `string[]` | Built-in (62 words) | Custom adjective list; replaces the built-in list. |
 | `words.nouns` | `string[]` | Built-in (71 words) | Custom noun list; replaces the built-in list. |
 | `legend.enabled` | `boolean` | `false` (or `true` when `legend.path` is set) | When true, exports a secret source-to-codename JSON legend. |
@@ -135,9 +135,21 @@ unaffected. Disable with `tyroCamo({ discover: { enabled: false } })`.
 
 ### How Targeting Works
 
-- **Chunks are always camouflaged when `js` is in `include`.** Rollup emits JavaScript for every
-  entry, shared chunk and dynamic import, so `app.js`, `shared.js` and an async `heavy.js` are all
-  renamed. A chunk's `name` carries no extension (`heavy`, not `heavy.js`), which the plugin handles.
+- **Script extensions target JavaScript chunks.** Rollup emits JavaScript for every entry, shared
+  chunk and dynamic import, so `app.js`, `shared.js` and an async `heavy.ts` are all renamed. A
+  chunk's `name` carries no extension (`heavy`, not `heavy.ts`), which the plugin handles.
+  `include: ['ts', 'css']` therefore works, and listing `ts` is equivalent to listing `js` - a
+  `.ts` source is compiled to JavaScript *before* Rollup names its output:
+
+  | Source | Camouflaged with `['js', 'ts', 'css']` |
+  | :--- | :--- |
+  | `resources/js/app.js` | yes |
+  | `resources/js/app.ts`, `app.tsx`, `app.mjs`, `app.vue`, `app.svelte` | yes - compiled to a JS chunk |
+  | `resources/css/app.css` | yes |
+  | `resources/css/theme.scss` | no - preprocessor output keeps its own extension, so add `scss` |
+  | `resources/fonts/font.woff2` | no - delegated to your handler |
+
+  Omitting every script extension (e.g. `include: ['css']`) leaves all JavaScript untouched.
 - **Assets are classified by their real extension.** Fonts (`.woff2`), images and other non-listed
   types immediately delegate to your own `assetFileNames` handler, so custom asset pipelines and
   CSS `url()` rewriting keep working.

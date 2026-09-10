@@ -100,12 +100,25 @@ function identityOf(info: OutputPatternInfo, options: WrapperOptions): string {
 }
 
 /**
- * Rollup emits JavaScript for every chunk, so a chunk is camouflaged whenever `js` is targeted -
- * even though its `name` has no extension. Assets are classified by their real extension so
- * fonts, images and other custom pipelines keep delegating to the user's handler.
+ * Extensions whose sources are compiled to JavaScript before Rollup names the output.
+ *
+ * A `.ts`, `.tsx`, `.vue` or `.mjs` source never reaches a naming hook as itself - by then it is a
+ * JavaScript chunk whose `name` carries no extension at all. Listing any of these in `include`
+ * therefore targets chunks, exactly as `'js'` does, so `include: ['ts', 'css']` camouflages
+ * TypeScript entries instead of silently doing nothing.
+ */
+const SCRIPT_EXTENSIONS = new Set(['js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'vue', 'svelte']);
+
+/**
+ * Rollup emits JavaScript for every chunk, so a chunk is camouflaged whenever any script extension
+ * is targeted - even though its `name` has no extension. Assets are classified by their real
+ * extension so fonts, images and other custom pipelines keep delegating to the user's handler.
  */
 function isTargeted(info: OutputPatternInfo, include: Set<string>): boolean {
-  if (info.type === 'chunk') return include.has('js');
+  if (info.type === 'chunk') {
+    for (const extension of include) if (SCRIPT_EXTENSIONS.has(extension)) return true;
+    return false;
+  }
   const ext = extensionOf(info.originalFileName) || extensionOf(info.name) || extensionOf(info.fileName);
   return Boolean(ext) && include.has(ext);
 }

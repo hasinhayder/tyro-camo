@@ -19,7 +19,13 @@ export interface TyroCamoOptions {
   /** Strategy for chunks not explicitly listed in aliases: 'codename' | 'nameless' | 'preserve' */
   unmappedStrategy?: Strategy;
 
-  /** Extensions to camouflage. Defaults to ['js', 'css'] */
+  /**
+   * Extensions to camouflage. Defaults to `['js', 'ts', 'css']`.
+   *
+   * Script extensions (`js`, `ts`, `tsx`, `jsx`, `mjs`, `cjs`, `vue`, `svelte`) all target
+   * JavaScript chunks, because those sources are compiled before Rollup names the output.
+   * Any other extension targets emitted assets by their real extension.
+   */
   include?: string[];
 
   /** Optional custom word lists to replace the built-in words */
@@ -40,7 +46,7 @@ export interface TyroCamoOptions {
 }
 
 const DEFAULT_FORMAT = 'assets/[codename]-[hash][extname]';
-const DEFAULT_INCLUDE = ['js', 'css'];
+const DEFAULT_INCLUDE = ['js', 'ts', 'css'];
 const DEFAULT_LEGEND_PATH = '.camo-legend.json';
 
 export function tyroCamo(options: TyroCamoOptions = {}): Plugin {
