@@ -4,13 +4,43 @@ Stealth asset camouflage for Laravel & Vite. Cloak and camouflage compiled front
 
 ---
 
-## The Problem
+## What Problem Does This Solve?
 
-In Laravel applications using Vite, compiled frontend assets reveal their purpose through their filenames in production (e.g. `player.js`, `devtools-guard.js`, `license-check.js`, `checkout.js`). Even with hash suffixes (`player-C9x0a.js`), the source filename is exposed in the public HTML and browser devtools.
+Imagine you build a Laravel website with special features—such as a video player for paying subscribers, a license verification script, an anti-tamper guard, or a proprietary algorithm.
 
-Laravel resolves compiled assets via `public/build/manifest.json`. When Blade templates use `@vite('resources/js/player.js')`, Laravel simply inspects the manifest to locate the target bundle path.
+When you run `npm run build`, Vite bundles your files and puts them in your public folder. In your webpage HTML, anyone can right-click and view page source to see:
 
-**Tyro Camo** automatically cloaks compiled JavaScript and CSS assets under symbolic, deterministic code names (e.g. `swift-tiger-[hash].js`, `amber-harbor-[hash].js`, `deep-lagoon-[hash].css`) without breaking Laravel's asset manifest keys.
+```html
+<!-- Without Tyro Camo: Source names are given away to anyone inspecting the page -->
+<script src="/build/assets/video-player-C9x0a.js"></script>
+<script src="/build/assets/anti-tamper-guard-D4m2k.js"></script>
+<script src="/build/assets/license-validator-E7p9z.js"></script>
+```
+
+Even though Vite adds random hashes (`-C9x0a.js`), the **original filename is still in plain sight**. This creates two problems:
+1. **It's a roadmap for bad actors:** Anyone can see exactly which script handles your DRM, video playback, or security checks, making it trivial to block them with ad-blockers (like uBlock Origin) or tamper with them in browser DevTools.
+2. **Obvious obfuscation looks suspicious:** If you manually rename files to random gibberish like `x839fa.js`, it triggers security heuristics and ad-blockers because it *looks* like malicious code.
+
+### The Laravel Dilemma
+Why can't you just rename the files in your project? Because Laravel relies on `manifest.json`. If you change filenames, Laravel's `@vite('resources/js/video-player.js')` helper will crash with:
+> `Unable to locate file in Vite manifest: resources/js/video-player.js`
+
+### How Tyro Camo Fixes It
+**Tyro Camo acts like a stealth cloaking device for your assets.**
+
+It automatically disguises sensitive bundle filenames under innocent, human-friendly codenames (like nature, colors, and animals) **without changing a single line of your Laravel or Blade code**:
+
+```html
+<!-- With Tyro Camo: Innocent, natural-looking codenames that blend in -->
+<script src="/build/assets/swift-tiger-C9x0a.js"></script>
+<script src="/build/assets/deep-lagoon-D4m2k.js"></script>
+<script src="/build/assets/amber-beacon-E7p9z.js"></script>
+```
+
+- ✅ **Your Blade templates stay 100% normal:** You still write `@vite('resources/js/video-player.js')`.
+- ✅ **Laravel stays 100% happy:** `manifest.json` keeps the original keys mapped correctly.
+- ✅ **Browsers & ad-blockers see ordinary names:** The bundles look like ordinary, harmless third-party libraries.
+- ✅ **Completely automated:** Drop it into `vite.config.js` and you're done.
 
 ---
 
@@ -73,7 +103,7 @@ tyroCamo({
   // Optional deterministic rotation seed. Change this to refresh generated codenames.
   seed: 'rotation-2026-09',
 
-  // Strategy for chunks not listed in aliases: 'codename' | 'nameless' | 'preserve'
+  // Strategy for chunks not listed in aliases: 'codename' | 'nameless'
   unmappedStrategy: 'codename',
 
   // Extensions to camouflage (defaults to ['js', 'ts', 'css'])
@@ -126,7 +156,7 @@ unaffected. Disable with `tyroCamo({ discover: { enabled: false } })`.
 | `aliases` | `Record<string, string>` | `{}` | Exact project-root-relative source path to codename mappings. |
 | `format` | `string` | `'assets/[codename]-[hash][extname]'` | Rollup output pattern with `[codename]`, `[hash]`, `[extname]`. |
 | `seed` | `string` | `undefined` | Optional deterministic seed; changing it rotates generated codenames. |
-| `unmappedStrategy` | `'codename' \| 'nameless' \| 'preserve'` | `'codename'` | Strategy for targeted files without explicit aliases. |
+| `unmappedStrategy` | `'codename' \| 'nameless'` | `'codename'` | Strategy for targeted files without explicit aliases (`'codename'` generates readable codenames; `'nameless'` uses pure hashes). |
 | `include` | `string[]` | `['js', 'ts', 'css']` | Extensions to camouflage. Script extensions target JavaScript chunks; anything else targets emitted assets by their real extension. |
 | `words.adjectives` | `string[]` | Built-in (62 words) | Custom adjective list; replaces the built-in list. |
 | `words.nouns` | `string[]` | Built-in (71 words) | Custom noun list; replaces the built-in list. |
@@ -162,15 +192,15 @@ unaffected. Disable with `tyroCamo({ discover: { enabled: false } })`.
 
 ### Legend Format
 
-The legend maps every source to the codename it received. Files deliberately left un-camouflaged by
-`unmappedStrategy: 'nameless' | 'preserve'` are recorded with a bracketed marker, so an audit can
-never mistake a leaked name for a camouflaged one:
+The legend maps every source to the codename it received. Files bypassed with
+`unmappedStrategy: 'nameless'` are recorded with a `"[nameless]"` marker, so an audit can
+never mistake a bypassed name for a camouflaged one:
 
 ```json
 {
   "resources/css/app.css": "hidden-cove",
   "resources/js/player.js": "swift-tiger",
-  "resources/js/devtools-guard.js": "[preserve]"
+  "resources/js/devtools-guard.js": "[nameless]"
 }
 ```
 
@@ -182,16 +212,10 @@ never mistake a leaked name for a camouflaged one:
 
 ### Strategy Trade-offs
 
-| `unmappedStrategy` | Un-aliased entries/chunks | Leaks source name? |
+| `unmappedStrategy` | Emitted bundle naming | Description |
 | :--- | :--- | :--- |
-| `'codename'` (default) | `assets/amber-harbor-[hash].js` | No |
-| `'nameless'` | `assets/[hash].js` | No (loses readability) |
-| `'preserve'` | Your own pattern, e.g. `assets/[name]-[hash].js` | **Yes** - `[name]` resolves to the relative source path for entries, producing `assets/resources/js/app.js-[hash].js` |
-
-> [!CAUTION]
-> `'preserve'` is an escape hatch, not a privacy mode. For entries, Rollup's `[name]` is the
-> project-relative source path, so `preserve` can expose *more* than Vite's default naming. Use it
-> only when another tool owns your filenames, and expect those files in the legend as `"[preserve]"`.
+| `'codename'` (default) | `assets/amber-harbor-[hash].js` | Disguises un-aliased files under natural, friendly codenames. |
+| `'nameless'` | `assets/[hash].js` | Emits pure content hashes with no name prefix. |
 
 ---
 
