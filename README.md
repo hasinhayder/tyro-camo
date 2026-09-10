@@ -1,5 +1,9 @@
 # vite-plugin-tyro-camo
 
+[![Tests](https://github.com/hasinhayder/tyro-camo/actions/workflows/tests.yml/badge.svg)](https://github.com/hasinhayder/tyro-camo/actions/workflows/tests.yml)
+[![npm version](https://img.shields.io/npm/v/vite-plugin-tyro-camo.svg?style=flat-square)](https://www.npmjs.com/package/vite-plugin-tyro-camo)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+
 Stealth asset camouflage for Laravel & Vite. Cloak and camouflage compiled frontend JavaScript and CSS bundles under symbolic, human-friendly, inoffensive codenames while keeping Vite's `manifest.json` completely intact — **no changes are needed in Blade templates or source files**.
 
 ---
