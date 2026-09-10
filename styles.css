@@ -52,7 +52,40 @@ html {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Modern standard scrollbar styling (Firefox / modern browsers) */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) var(--bg-core);
 }
+
+/* Custom WebKit Scrollbar (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-core);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  border: 2px solid var(--bg-core);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--laravel-red);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-core);
+}
+
 
 body {
   min-height: 100vh;
@@ -184,6 +217,34 @@ body {
   }
 }
 
+.btn-nav-link,
+.btn-github-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  padding: 7px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.btn-nav-link:hover,
+.btn-github-header:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-medium);
+}
+
+.btn-nav-link svg,
+.btn-github-header svg {
+  flex-shrink: 0;
+}
+
 .btn-sm {
   font-size: 0.82rem;
   font-weight: 600;
@@ -274,7 +335,7 @@ body {
   font-size: clamp(1.1rem, 2vw, 1.35rem);
   line-height: 1.6;
   color: var(--text-secondary);
-  max-width: 660px;
+  max-width: 860px;
   margin: 0 auto 44px;
   font-weight: 400;
 }
@@ -1267,4 +1328,15 @@ pre {
 
 .footer-sub {
   color: var(--text-muted);
+}
+
+.footer-github-link {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.footer-github-link:hover {
+  color: #FFFFFF;
 }
