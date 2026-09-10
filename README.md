@@ -164,32 +164,6 @@ unaffected. Disable with `tyroCamo({ discover: { enabled: false } })`.
 | `legend.path` | `string` | `'.camo-legend.json'` | Path (relative to root) to write the legend JSON. |
 | `discover.enabled` | `boolean` | `true` | Auto-register `@vite()` entries found in Blade templates as build inputs. |
 | `discover.dirs` | `string[]` | `['resources/views']` | Directories (relative to project root) scanned for `*.blade.php` files. |
-
-### How Targeting Works
-
-- **Script extensions target JavaScript chunks.** Rollup emits JavaScript for every entry, shared
-  chunk and dynamic import, so `app.js`, `shared.js` and an async `heavy.ts` are all renamed. A
-  chunk's `name` carries no extension (`heavy`, not `heavy.ts`), which the plugin handles.
-  `include: ['ts', 'css']` therefore works, and listing `ts` is equivalent to listing `js` - a
-  `.ts` source is compiled to JavaScript *before* Rollup names its output:
-
-  | Source | Camouflaged with `['js', 'ts', 'css']` |
-  | :--- | :--- |
-  | `resources/js/app.js` | yes |
-  | `resources/js/app.ts`, `app.tsx`, `app.mjs`, `app.vue`, `app.svelte` | yes - compiled to a JS chunk |
-  | `resources/css/app.css` | yes |
-  | `resources/css/theme.scss` | no - preprocessor output keeps its own extension, so add `scss` |
-  | `resources/fonts/font.woff2` | no - delegated to your handler |
-
-  Omitting every script extension (e.g. `include: ['css']`) leaves all JavaScript untouched.
-- **Assets are classified by their real extension.** Fonts (`.woff2`), images and other non-listed
-  types immediately delegate to your own `assetFileNames` handler, so custom asset pipelines and
-  CSS `url()` rewriting keep working.
-- **Aliases match exactly.** `resources/js/player.js` never claims `resources/js/admin/player.js`.
-  A partial or basename-only key never matches, so an alias cannot be stolen by an unrelated file.
-- **Naming is stable across machines.** Source identities are always project-root-relative, and
-  absolute paths outside the project root are never emitted into filenames.
-
 ### Legend Format
 
 The legend maps every source to the codename it received. Files bypassed with
@@ -219,27 +193,6 @@ never mistake a bypassed name for a camouflaged one:
 
 ---
 
-## Security Model
-
-Tyro Camo hides **filenames** from rendered HTML and browser devtools. Be precise about what that
-does and does not cover:
-
-- **What it protects:** the `<script src>`/`<link href>` URLs that Laravel's `@vite()` directive
-  renders, and every emitted file in `public/build/assets/`. Nothing in those paths contains a
-  source name.
-- **What it does not protect:** `public/build/manifest.json`. Laravel resolves `@vite('resources/js/player.js')`
-  by looking up that exact key, so the manifest must keep the source path (and Rollup's chunk `name`)
-  intact. Because `public/` is served by your web server, `/build/manifest.json` maps every source to
-  its camouflaged file unless you block it. If your threat model includes manifest access, deny that
-  route at the web-server or framework level; no filename scheme can substitute for it.
-- **The legend is a secret.** `.camo-legend.json` is the inverse mapping. Keep it outside public web
-  roots, never commit it, and let CI read it only where needed.
-
-Camouflaging raises the cost of casual inspection; it is not a substitute for keeping real secrets
-out of client-side code.
-
----
-
 ## Features
 
 - **Non-Destructive Rollup Wrapping:** Preserves custom user functions, output arrays (multi-output
@@ -254,23 +207,6 @@ out of client-side code.
   slang or controversial terms, and no word repeated across both lists (4,402 combinations).
 - **Auditable:** An optional legend records every mapping, including files that were deliberately
   left un-camouflaged.
-
----
-
-## Development & Local Testing
-
-For local development commands, testing workflows, and instructions on testing in local Laravel projects without publishing to NPM, see the **[Development Guide](development.md)**.
-
-```bash
-npm test          # Run Vitest test suite (unit + real Vite build integration)
-npm run typecheck # Validate TypeScript types
-npm run build     # Build ESM/CJS bundles to dist/
-```
-
-The integration suite performs real `vite.build()` runs and asserts that no emitted filename
-contains a source basename, so naming regressions fail the build instead of shipping.
-
----
 
 ## License
 
