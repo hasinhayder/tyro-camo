@@ -1,8 +1,10 @@
-import type { Plugin, UserConfig } from 'vite';
-import type { PluginContext } from 'rollup';
+import type { Plugin, ResolvedConfig, UserConfig } from 'vite';
+import type { InputOption, PluginContext } from 'rollup';
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { CodenameResolver, normalizePath } from './dictionary';
+import { DEFAULT_DISCOVER_DIRS, discoverViteEntries, type DiscoverOptions } from './discover';
 import { BYPASS_MARKERS, wrapOutput, type Strategy, type WrapperOptions } from './wrapper';
 
 export interface TyroCamoOptions {
@@ -32,6 +34,7 @@ export interface TyroCamoOptions {
     enabled?: boolean;
     path?: string; // defaults to '.camo-legend.json'
   };
+  discover?: DiscoverOptions;
 }
 
 const DEFAULT_FORMAT = 'assets/[codename]-[hash][extname]';
@@ -47,6 +50,8 @@ export function tyroCamo(options: TyroCamoOptions = {}): Plugin {
 
   const legendPath = options.legend?.path ?? DEFAULT_LEGEND_PATH;
   const legendEnabled = options.legend?.enabled ?? Boolean(options.legend?.path);
+  const discoverEnabled = options.discover?.enabled ?? true;
+  const discoverDirs = options.discover?.dirs ?? DEFAULT_DISCOVER_DIRS;
 
   const wrapper: WrapperOptions = {
     aliases,
@@ -74,9 +79,10 @@ export function tyroCamo(options: TyroCamoOptions = {}): Plugin {
       config.build.rollupOptions.output = wrapOutput(config.build.rollupOptions.output, wrapper);
     },
 
-    configResolved(config) {
+    configResolved(config: ResolvedConfig) {
       wrapper.root = config.root;
       wrapper.assetsDir = config.build.assetsDir || 'assets';
+      if (discoverEnabled) injectBladeEntries(config, discoverDirs);
     },
 
     async writeBundle(this: PluginContext) {
@@ -112,7 +118,41 @@ export function tyroCamo(options: TyroCamoOptions = {}): Plugin {
   };
 }
 
+function inputValues(input: InputOption | undefined): string[] {
+  if (typeof input === 'string') return [input];
+  if (Array.isArray(input)) return input.filter((value): value is string => typeof value === 'string');
+  if (input && typeof input === 'object') return Object.values(input).filter((value): value is string => typeof value === 'string');
+  return [];
+}
+
+function appendInput(input: InputOption, additions: string[], root: string): InputOption {
+  if (typeof input === 'string') input = [input];
+  const named: Record<string, string> = Array.isArray(input)
+    ? Object.fromEntries(input.map((value) => [normalizePath(relative(root, value)).replace(/\.[^./]+$/, ''), value]))
+    : { ...input };
+  for (const addition of additions) named[normalizePath(relative(root, addition)).replace(/\.[^./]+$/, '')] = addition;
+  return named;
+}
+
+function injectBladeEntries(resolved: ResolvedConfig, dirs: string[]): void {
+  if (resolved.command !== 'build' || resolved.build.ssr) return;
+  const input = resolved.build.rollupOptions.input;
+  if (!input) return;
+  const known = new Set(inputValues(input).map(normalizePath));
+  const additions: string[] = [];
+  const missing: string[] = [];
+  for (const entry of discoverViteEntries(resolved.root, dirs)) {
+    if (known.has(entry)) continue;
+    if (existsSync(resolve(resolved.root, entry))) additions.push(resolve(resolved.root, entry));
+    else missing.push(entry);
+  }
+  if (additions.length) resolved.build.rollupOptions.input = appendInput(input, additions, resolved.root);
+  if (missing.length) resolved.logger.warn(`[tyro-camo] Blade templates reference @vite entries that do not exist and were skipped: ${missing.join(', ')}`);
+}
+
 export { CodenameResolver, normalizePath } from './dictionary';
 export { BYPASS_MARKERS, wrapOutput } from './wrapper';
+export { DEFAULT_DISCOVER_DIRS, discoverViteEntries, extractViteEntries } from './discover';
+export type { DiscoverOptions } from './discover';
 export type { Strategy, WrapperOptions } from './wrapper';
 export default tyroCamo;

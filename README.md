@@ -88,6 +88,14 @@ tyroCamo({
 });
 ```
 
+### Blade Entry Discovery
+
+`laravel-vite-plugin` only builds entries listed in its `input` option. Tyro Camo scans
+Blade templates recursively under `resources/views` during `vite build` and appends missing
+static `@vite()` entries to Rollup inputs, preserving manifest keys and camouflaging outputs.
+External URLs and PHP variables are skipped; missing files produce warnings. Disable with
+`tyroCamo({ discover: { enabled: false } })`.
+
 ### Options Reference
 
 | Option | Type | Default | Description |
@@ -100,6 +108,8 @@ tyroCamo({
 | `words.nouns` | `string[]` | Built-in (71 words) | Custom noun list; replaces the built-in list. |
 | `legend.enabled` | `boolean` | `false` (or `true` when `legend.path` is set) | When true, exports a secret source-to-codename JSON legend. |
 | `legend.path` | `string` | `'.camo-legend.json'` | Path (relative to root) to write the legend JSON. |
+| `discover.enabled` | `boolean` | `true` | Auto-register `@vite()` entries found in Blade templates as build inputs. |
+| `discover.dirs` | `string[]` | `['resources/views']` | Directories (relative to project root) scanned for `*.blade.php` files. |
 
 ### How Targeting Works
 
@@ -205,4 +215,3 @@ contains a source basename, so naming regressions fail the build instead of ship
 ## License
 
 MIT License. See [LICENSE](LICENSE).
-
