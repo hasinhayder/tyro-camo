@@ -171,6 +171,30 @@ describe('wrapper', () => {
     expect(array[0].entryFileNames(chunk({ isEntry: true, facadeModuleId: `${process.cwd()}/resources/js/app.js` }))).toMatch(/^assets\//);
   });
 
+  it('answers Vite internal directory probes without consuming a codename', () => {
+    // Vite calls assetFileNames with a synthetic asset to learn the output directory used for
+    // rewriting `url()` in CSS, and only reads path.dirname() of the result.
+    const resolver = new CodenameResolver();
+    const output = wrapOutput({ assetFileNames: 'assets/[name]-[hash][extname]' }, createOptions({ resolver })) as any;
+
+    const probe = {
+      type: 'asset',
+      name: 'resources/css/app.css',
+      names: ['resources/css/app.css'],
+      originalFileName: null,
+      originalFileNames: [],
+      source: '/* vite internal call, ignore */',
+    };
+
+    expect(output.assetFileNames(probe)).toBe('assets/[name]-[hash][extname]');
+    expect(resolver.entries()).toEqual({});
+
+    // A real asset afterwards still receives a codename.
+    expect(output.assetFileNames(asset({ name: 'resources/css/app.css', originalFileName: 'resources/css/app.css' })))
+      .toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\[extname\]$/);
+    expect(Object.keys(resolver.entries())).toEqual(['resources/css/app.css']);
+  });
+
   it('falls back to the configured assets dir when the user set no pattern', () => {
     const output = wrapOutput({}, createOptions({ assetsDir: 'static', include: ['css'] })) as any;
     const logo = asset({ name: 'logo.svg', originalFileName: 'resources/img/logo.svg' });

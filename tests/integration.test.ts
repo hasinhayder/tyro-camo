@@ -48,7 +48,9 @@ const runBuild = async (outDir: string, legendPath: string) => {
         output: {
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash][extname]',
+          // A function pattern makes Vite issue its internal directory probe, which must not
+          // register codenames. See the "phantom legend" regression test below.
+          assetFileNames: () => 'assets/[name]-[hash][extname]',
         },
       },
     },
@@ -63,7 +65,9 @@ const runBuild = async (outDir: string, legendPath: string) => {
 };
 
 beforeAll(async () => {
-  await rm(resolve(here, '.tmp'), { recursive: true, force: true });
+  // Only this suite's fixture: `tests/.tmp` is shared with the Blade injection suite, which
+  // runs in a parallel worker.
+  await rm(projectRoot, { recursive: true, force: true });
 
   await write(resolve(projectRoot, 'package.json'), JSON.stringify({ name: 'camo-fixture', private: true, type: 'module' }));
   await write(resolve(projectRoot, 'resources/js/app.js'), [
@@ -85,7 +89,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await rm(resolve(here, '.tmp'), { recursive: true, force: true });
+  await rm(projectRoot, { recursive: true, force: true });
 });
 
 describe('integration: real Vite build', () => {
@@ -143,6 +147,47 @@ describe('integration: real Vite build', () => {
     expect(second.files).toEqual(first.files);
     expect(second.manifest).toEqual(first.manifest);
     expect(second.legend).toEqual(first.legend);
+  });
+
+  it('records no phantom legend entries for Vite internal asset probes', async () => {
+    // With an ARRAY input (the shape laravel-vite-plugin produces) Vite's internal directory
+    // probe passes a bare basename such as `app.css`, which must not be mistaken for a real
+    // asset - doing so consumes a codename and adds a legend entry for a file never emitted.
+    const outDir = 'dist-probe';
+    const legendPath = '.camo-legend-probe.json';
+
+    await build({
+      root: projectRoot,
+      configFile: false,
+      logLevel: 'silent',
+      build: {
+        outDir,
+        emptyOutDir: true,
+        manifest: true,
+        minify: false,
+        rollupOptions: {
+          input: [
+            resolve(projectRoot, 'resources/css/app.css'),
+            resolve(projectRoot, 'resources/js/player.js'),
+          ],
+          output: {
+            entryFileNames: 'assets/[name]-[hash].js',
+            chunkFileNames: 'assets/[name]-[hash].js',
+            assetFileNames: () => 'assets/[name]-[hash][extname]',
+          },
+        },
+      },
+      plugins: [tyroCamo({ legend: { enabled: true, path: legendPath } })],
+    });
+
+    const legend = JSON.parse(await readFile(resolve(projectRoot, legendPath), 'utf8')) as Record<string, string>;
+    const files = await readdir(resolve(projectRoot, outDir, 'assets'));
+
+    expect(Object.keys(legend).sort()).toEqual(['resources/css/app.css', 'resources/js/player.js']);
+    for (const [source, codename] of Object.entries(legend)) {
+      expect(source).toMatch(/^resources\//);
+      expect(files.some((file) => file.startsWith(`${codename}-`))).toBe(true);
+    }
   });
 
   it('never duplicates a multi-output configuration', async () => {

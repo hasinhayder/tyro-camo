@@ -93,11 +93,29 @@ tyroCamo({
 
 ### Blade Entry Discovery
 
-`laravel-vite-plugin` only builds entries listed in its `input` option. Tyro Camo scans
-Blade templates recursively under `resources/views` during `vite build` and appends missing
-static `@vite()` entries to Rollup inputs, preserving manifest keys and camouflaging outputs.
-External URLs and PHP variables are skipped; missing files produce warnings. Disable with
-`tyroCamo({ discover: { enabled: false } })`.
+`laravel-vite-plugin` only builds the entries listed in its `input` option, and it never scans
+Blade templates. When a template references an extra entry via `@vite('resources/js/hasin.js')`,
+the build succeeds but Laravel throws `Unable to locate file in Vite manifest` at runtime.
+
+During `vite build`, Tyro Camo recursively scans `resources/views` (configurable), appends every
+missing `@vite()` entry to the Rollup inputs, and camouflages it like any other entry. Manifest
+keys stay identical to the Blade references, so nothing in your templates changes.
+
+How directives are read:
+
+| Blade | Discovered entries |
+| :--- | :--- |
+| `@vite('resources/js/app.js')` | `resources/js/app.js` |
+| `@vite(['resources/css/app.css', 'resources/js/app.js'])` | both |
+| `@vite('resources/js/app.js', 'build')` | `resources/js/app.js` - the second argument is a build directory |
+| `@vite($entries)` | none - PHP variables cannot be resolved statically |
+| `@vite('https://cdn.example.com/app.js')` | none - external URLs bypass the manifest |
+| `{{-- @vite('resources/js/old.js') --}}` | none - commented-out directives are ignored |
+
+The existing `input` shape is preserved: arrays stay arrays, so Rollup's `[name]` keeps resolving
+to the basename rather than the whole relative path. Referenced paths that do not exist (or that
+point at a directory) are reported as warnings instead of failing the build. The dev server is
+unaffected. Disable with `tyroCamo({ discover: { enabled: false } })`.
 
 ### Options Reference
 

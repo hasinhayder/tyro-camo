@@ -33,7 +33,20 @@ export interface OutputPatternInfo {
   originalFileName?: string | null;
   facadeModuleId?: string | null;
   moduleIds?: string[];
+  source?: unknown;
 }
+
+/**
+ * Vite calls `assetFileNames` with a synthetic asset to learn the output *directory* used when
+ * rewriting `url()` references in CSS, and marks the call as internal:
+ *
+ *     assetFileNames({ type: 'asset', name, originalFileName: null,
+ *                      source: '/* vite internal call, ignore *\/' })
+ *
+ * Only `path.dirname()` of the result is used. Treating it as a real asset would consume a
+ * codename from the pool and record a phantom entry in the legend for a file never emitted.
+ */
+const VITE_INTERNAL_CALL = '/* vite internal call, ignore */';
 
 type Pattern = string | ((info: any) => string);
 type Kind = 'entry' | 'chunk' | 'asset';
@@ -112,12 +125,20 @@ function render(format: string, codename: string, kind: Kind, reference: string 
   return result;
 }
 
+function isViteInternalCall(info: OutputPatternInfo): boolean {
+  return info.source === VITE_INTERNAL_CALL;
+}
+
 function wrap(pattern: Pattern | undefined, kind: Kind, options: WrapperOptions): Pattern {
   const include = new Set(options.include.map((ext) => ext.replace(/^\./, '').toLowerCase()));
   const fallback = defaultPattern(kind, options);
 
   return (info: OutputPatternInfo) => {
     const original = typeof pattern === 'function' ? pattern(info) : pattern;
+
+    // Answer Vite's internal directory probe with the untouched pattern: no codename is resolved
+    // and nothing is recorded, while the caller still gets the directory it asked for.
+    if (isViteInternalCall(info)) return original ?? fallback;
     if (!isTargeted(info, include)) return original ?? fallback;
 
     const source = identityOf(info, options);
