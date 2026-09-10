@@ -1,0 +1,153 @@
+import type { OutputOptions } from 'rollup';
+import { isAbsolute, relative } from 'node:path';
+import { CodenameResolver, normalizePath } from './dictionary';
+
+export type Strategy = 'codename' | 'nameless' | 'preserve';
+
+/**
+ * Legend values used for targeted files that were deliberately left without a codename.
+ * The brackets guarantee these can never collide with a real codename (codenames are
+ * lowercase `[a-z0-9-]` only).
+ */
+export const BYPASS_MARKERS: Record<Exclude<Strategy, 'codename'>, string> = {
+  nameless: '[nameless]',
+  preserve: '[preserve]',
+};
+
+export interface WrapperOptions {
+  aliases: Record<string, string>;
+  format: string;
+  include: string[];
+  unmappedStrategy: Strategy;
+  resolver: CodenameResolver;
+  root?: string;
+  assetsDir?: string;
+  onBypass?: (source: string, strategy: Exclude<Strategy, 'codename'>) => void;
+}
+
+/** The subset of Rollup's `PreRenderedChunk` / `PreRenderedAsset` this plugin inspects. */
+export interface OutputPatternInfo {
+  type?: 'chunk' | 'asset';
+  name?: string;
+  fileName?: string;
+  originalFileName?: string | null;
+  facadeModuleId?: string | null;
+  moduleIds?: string[];
+}
+
+type Pattern = string | ((info: any) => string);
+type Kind = 'entry' | 'chunk' | 'asset';
+
+const ANONYMOUS = 'anonymous';
+
+function extensionOf(value: unknown): string {
+  if (typeof value !== 'string' || !value) return '';
+  const match = normalizePath(value).match(/\.([^./\\]+)$/);
+  return match ? match[1].toLowerCase() : '';
+}
+
+/** Absolute paths outside the project root are unusable as stable, machine-independent identities. */
+function usableAbsolute(value: string, root?: string): boolean {
+  if (!root || !isAbsolute(value)) return true;
+  const rel = relative(root, value);
+  return Boolean(rel) && !rel.startsWith('..') && !isAbsolute(rel);
+}
+
+function relativize(value: string, root?: string): string {
+  if (!root || !isAbsolute(value)) return normalizePath(value);
+  return normalizePath(relative(root, value));
+}
+
+/**
+ * Stable identity of the file being named.
+ *
+ * A chunk's `name` carries no extension, `facadeModuleId` is `null` for shared chunks and
+ * `originalFileName` is `null` for some assets - so every available field is probed, in
+ * preference order, until one yields a project-relative path.
+ */
+function identityOf(info: OutputPatternInfo, options: WrapperOptions): string {
+  const candidates = [
+    info.originalFileName,
+    info.facadeModuleId,
+    Array.isArray(info.moduleIds) ? info.moduleIds[0] : '',
+    info.name,
+    info.fileName,
+  ];
+
+  let fallback = '';
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string' || !candidate) continue;
+    if (!usableAbsolute(candidate, options.root)) continue;
+    const identity = relativize(candidate, options.root);
+    if (!identity) continue;
+    if (!identity.startsWith('..')) return identity;
+    if (!fallback) fallback = identity;
+  }
+  return fallback || ANONYMOUS;
+}
+
+/**
+ * Rollup emits JavaScript for every chunk, so a chunk is camouflaged whenever `js` is targeted -
+ * even though its `name` has no extension. Assets are classified by their real extension so
+ * fonts, images and other custom pipelines keep delegating to the user's handler.
+ */
+function isTargeted(info: OutputPatternInfo, include: Set<string>): boolean {
+  if (info.type === 'chunk') return include.has('js');
+  const ext = extensionOf(info.originalFileName) || extensionOf(info.name) || extensionOf(info.fileName);
+  return Boolean(ext) && include.has(ext);
+}
+
+function defaultPattern(kind: Kind, options: WrapperOptions): string {
+  const dir = options.assetsDir || 'assets';
+  return kind === 'asset' ? `${dir}/[name]-[hash][extname]` : `${dir}/[name]-[hash].js`;
+}
+
+function render(format: string, codename: string, kind: Kind, reference: string | undefined): string {
+  let result = format.replace(/\[codename\]/g, codename);
+  if (kind !== 'asset' && result.includes('[extname]')) {
+    // Derive the extension from the pattern the user (or Vite) would have used, so custom
+    // `.cjs`/`.mjs` outputs are honoured instead of always forcing `.js`.
+    result = result.replace(/\[extname\]/g, `.${extensionOf(reference) || 'js'}`);
+  }
+  return result;
+}
+
+function wrap(pattern: Pattern | undefined, kind: Kind, options: WrapperOptions): Pattern {
+  const include = new Set(options.include.map((ext) => ext.replace(/^\./, '').toLowerCase()));
+  const fallback = defaultPattern(kind, options);
+
+  return (info: OutputPatternInfo) => {
+    const original = typeof pattern === 'function' ? pattern(info) : pattern;
+    if (!isTargeted(info, include)) return original ?? fallback;
+
+    const source = identityOf(info, options);
+    // Aliases are exact, project-root-relative source paths. A partial or basename-only key
+    // never matches, so an alias can not be stolen by an unrelated same-named file.
+    const alias = options.aliases[source];
+
+    if (!alias && options.unmappedStrategy !== 'codename') {
+      options.onBypass?.(source, options.unmappedStrategy);
+      if (options.unmappedStrategy === 'preserve') return original ?? fallback;
+      return kind === 'asset' ? `${options.assetsDir || 'assets'}/[hash][extname]` : `${options.assetsDir || 'assets'}/[hash].js`;
+    }
+
+    return render(options.format, options.resolver.resolve(source, alias), kind, original ?? fallback);
+  };
+}
+
+export function wrapOutput(
+  output: OutputOptions | OutputOptions[] | string | undefined,
+  options: WrapperOptions,
+): OutputOptions | OutputOptions[] {
+  const wrapOne = (item: OutputOptions | string | undefined): OutputOptions => {
+    const base: OutputOptions = typeof item === 'string' ? { dir: item } : { ...(item ?? {}) };
+    return {
+      ...base,
+      entryFileNames: wrap(base.entryFileNames, 'entry', options),
+      chunkFileNames: wrap(base.chunkFileNames, 'chunk', options),
+      assetFileNames: wrap(base.assetFileNames, 'asset', options),
+    };
+  };
+
+  return Array.isArray(output) ? output.map(wrapOne) : wrapOne(output);
+}
