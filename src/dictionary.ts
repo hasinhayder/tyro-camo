@@ -16,6 +16,8 @@ function hashPath(value: string): number {
 export interface DictionaryOptions {
   adjectives?: string[];
   nouns?: string[];
+  /** Optional deterministic rotation seed. */
+  seed?: string;
 }
 
 export class CodenameResolver {
@@ -23,10 +25,12 @@ export class CodenameResolver {
   readonly nouns: string[];
   private readonly assigned = new Map<string, string>();
   private readonly used = new Map<string, string>();
+  private readonly seed: string;
 
   constructor(words: DictionaryOptions = {}) {
     this.adjectives = [...(words.adjectives?.length ? words.adjectives : defaultAdjectives)];
     this.nouns = [...(words.nouns?.length ? words.nouns : defaultNouns)];
+    this.seed = words.seed ?? '';
     if (!this.adjectives.length || !this.nouns.length) throw new Error('Tyro Camo word lists cannot be empty.');
   }
 
@@ -46,7 +50,8 @@ export class CodenameResolver {
     }
 
     const total = this.adjectives.length * this.nouns.length;
-    const offset = hashPath(requested ? `${key}:alias-collision` : key) % total;
+    const identity = requested ? `${key}:alias-collision` : key;
+    const offset = hashPath(this.seed ? `${this.seed}:${identity}` : identity) % total;
 
     for (let probe = 0; probe < total; probe++) {
       const index = (offset + probe) % total;

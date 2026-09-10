@@ -68,6 +68,9 @@ tyroCamo({
   // Output filename template (defaults to 'assets/[codename]-[hash][extname]')
   format: 'assets/[codename]-[hash][extname]',
 
+  // Optional deterministic rotation seed. Change this to refresh generated codenames.
+  seed: 'rotation-2026-09',
+
   // Strategy for chunks not listed in aliases: 'codename' | 'nameless' | 'preserve'
   unmappedStrategy: 'codename',
 
@@ -102,6 +105,7 @@ External URLs and PHP variables are skipped; missing files produce warnings. Dis
 | :--- | :--- | :--- | :--- |
 | `aliases` | `Record<string, string>` | `{}` | Exact project-root-relative source path to codename mappings. |
 | `format` | `string` | `'assets/[codename]-[hash][extname]'` | Rollup output pattern with `[codename]`, `[hash]`, `[extname]`. |
+| `seed` | `string` | `undefined` | Optional deterministic seed; changing it rotates generated codenames. |
 | `unmappedStrategy` | `'codename' \| 'nameless' \| 'preserve'` | `'codename'` | Strategy for targeted files without explicit aliases. |
 | `include` | `string[]` | `['js', 'css']` | File extensions targeted for camouflaging. |
 | `words.adjectives` | `string[]` | Built-in (62 words) | Custom adjective list; replaces the built-in list. |

@@ -29,6 +29,9 @@ export interface TyroCamoOptions {
     nouns?: string[];
   };
 
+  /** Optional deterministic seed for rotating generated codenames. */
+  seed?: string;
+
   /** Output mapping legend for debugging / auditing */
   legend?: {
     enabled?: boolean;
@@ -42,7 +45,7 @@ const DEFAULT_INCLUDE = ['js', 'css'];
 const DEFAULT_LEGEND_PATH = '.camo-legend.json';
 
 export function tyroCamo(options: TyroCamoOptions = {}): Plugin {
-  const resolver = new CodenameResolver(options.words);
+  const resolver = new CodenameResolver({ ...options.words, seed: options.seed });
   const aliases = Object.fromEntries(
     Object.entries(options.aliases ?? {}).map(([source, codename]) => [normalizePath(source), codename]),
   );

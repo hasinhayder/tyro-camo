@@ -45,6 +45,13 @@ describe('dictionary', () => {
     expect(second).toEqual(first);
   });
 
+  it('changes codenames when an optional seed changes', () => {
+    const original = new CodenameResolver().resolve('resources/js/app.js');
+    const rotated = new CodenameResolver({ seed: 'rotation-2026-09' }).resolve('resources/js/app.js');
+    expect(rotated).not.toBe(original);
+    expect(new CodenameResolver({ seed: 'rotation-2026-09' }).resolve('resources/js/app.js')).toBe(rotated);
+  });
+
   it('assigns a distinct built-in codename to each of 60+ files, regardless of resolution order', () => {
     const files = Array.from({ length: 64 }, (_, index) => `resources/js/file-${index}.js`);
     const forward = files.map((file) => new CodenameResolver().resolve(file));
