@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+*.tsbuildinfo
+
+# Test & coverage
+coverage/
+.test-camo-legend.json
+.camo-legend.json
+tests/.tmp/
+.review/
+
+# Logs & caches
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.vite/
+
+# Operating System & IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Packaging
+*.tgz
+plan.md
+development.md
+pitch-deck.md
+landing
+*.zip
+.cursor
+.commandcode
+.gemini
+.vscode
+.ai
+.kilo
