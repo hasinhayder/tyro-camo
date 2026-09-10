@@ -54,7 +54,7 @@ It automatically disguises sensitive bundle filenames under innocent, human-frie
 npm install vite-plugin-tyro-camo --save-dev
 ```
 
-> **Compatibility:** Supports Vite `^5.0.0`, `^6.0.0`, `^7.0.0`, `^8.0.0`, and later (`vite: >=5.0.0`), Node `>=18.0.0`, and works seamlessly with `@laravel/vite-plugin`.
+> **Requirements:** Vite `>= 5.0.0` • Node.js `>= 18.0.0` • Works seamlessly with `laravel-vite-plugin`.
 
 ---
 
