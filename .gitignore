@@ -35,3 +35,11 @@ Thumbs.db
 plan.md
 development.md
 pitch-deck.md
+landing
+*.zip
+.cursor
+.commandcode
+.gemini
+.vscode
+.ai
+.kilo
