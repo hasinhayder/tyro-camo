@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tyro Camo — Stealth Asset Camouflage for Laravel & Vite</title>
+  <meta name="description" content="Cloak revealing frontend JavaScript and CSS bundle names in production. Zero Blade changes, zero runtime overhead, 100% Vite manifest compliant.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient backdrop glows -->
+  <div class="glow-sphere sphere-top" aria-hidden="true"></div>
+  <div class="glow-sphere sphere-mid" aria-hidden="true"></div>
+
+  <!-- Header / Navigation -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#" class="logo-mark" aria-label="Tyro Camo Home">
+        <span class="logo-badge">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </span>
+        <span class="logo-text">TYRO<strong>CAMO</strong></span>
+      </a>
+      <div class="header-right">
+        <span class="version-pill">v1.0.0 for Vite &amp; Laravel</span>
+        <a href="#quickstart" class="btn-sm">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO SECTION -->
+    <section class="hero-section" id="hero">
+      <div class="hero-container">
+        <div class="badge-row">
+          <span class="tag-status">
+            <span class="pulse-dot"></span>
+            STEALTH ASSET CAMOUFLAGE
+          </span>
+        </div>
+
+        <h1 class="hero-title">
+          YOUR ASSET NAMES <br>
+          <span class="text-stroke">ARE GIVING AWAY</span> <br>
+          <span class="text-accent">THE SECRET.</span>
+        </h1>
+
+        <p class="hero-lead">
+          Stop broadcasting your proprietary source files to DevTools. Tyro Camo cloaks compiled assets into stealth codenames with zero changes to your Blade templates or JavaScript code.
+        </p>
+
+        <div class="hero-actions">
+          <div class="terminal-install-bar" id="install-trigger" title="Click to copy command">
+            <span class="cmd-prompt">$</span>
+            <span class="cmd-text" id="install-cmd">npm install vite-plugin-tyro-camo --save-dev</span>
+            <button class="copy-btn" id="copy-btn" aria-label="Copy install command">
+              <span id="copy-label">COPY</span>
+            </button>
+          </div>
+          <a href="#solution" class="btn-primary">See Interactive Camo</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: THE PROBLEM (EXPOSURE) -->
+    <section class="section problem-section" id="problem">
+      <div class="container">
+        <div class="section-label red-accent">THE EXPOSURE</div>
+        <h2 class="bold-headline">
+          WHAT REVERSE-ENGINEERS SEE <br>
+          <span class="hl-red">IN YOUR PRODUCTION SOURCE</span>
+        </h2>
+        <p class="section-desc">
+          Even with minification and content hashes, standard bundle names hand reverse-engineers a complete roadmap of your proprietary frontend logic.
+        </p>
+
+        <!-- DevTools Inspector Mockup -->
+        <div class="devtools-window">
+          <div class="window-chrome">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-amber"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="window-tab-bar">
+              <span class="tab">Console</span>
+              <span class="tab active">Sources (Publicly Exposed)</span>
+              <span class="tab">Network</span>
+            </div>
+          </div>
+          <div class="window-body">
+            <div class="source-list">
+              <div class="source-item danger-item">
+                <span class="item-tag tag-exposed">EXPOSED</span>
+                <span class="file-path">/build/assets/<strong>player-drm-guard</strong>-C9x0a.js</span>
+                <span class="flag-desc">Reveals video DRM &amp; anti-rip wrappers</span>
+              </div>
+              <div class="source-item danger-item">
+                <span class="item-tag tag-exposed">EXPOSED</span>
+                <span class="file-path">/build/assets/<strong>license-check-validator</strong>-A1b2c.js</span>
+                <span class="flag-desc">Tells adversaries where to flip license booleans</span>
+              </div>
+              <div class="source-item danger-item">
+                <span class="item-tag tag-exposed">EXPOSED</span>
+                <span class="file-path">/build/assets/<strong>devtools-detector-tamper</strong>-D3e4f.js</span>
+                <span class="flag-desc">Broadcasts anti-debugger detection logic</span>
+              </div>
+              <div class="source-item danger-item">
+                <span class="item-tag tag-exposed">EXPOSED</span>
+                <span class="file-path">/build/assets/<strong>checkout-fraud-prevention</strong>-E5g6h.js</span>
+                <span class="flag-desc">Identifies client-side heuristics and risk gates</span>
+              </div>
+            </div>
+          </div>
+          <div class="window-footer danger-footer">
+            <span>⚠️ 4 sensitive business components immediately targeted by inspecting page scripts</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: AFTER TYRO CAMO (THE RESULT) -->
+    <section class="section cloaked-section" id="camo-result">
+      <div class="container">
+        <div class="section-label emerald-accent">AFTER TYRO CAMO</div>
+        <h2 class="bold-headline">
+          WHAT THEY SEE <br>
+          <span class="hl-emerald">AFTER TURNING ON TYRO CAMO</span>
+        </h2>
+        <p class="section-desc">
+          Bundle paths are automatically replaced with innocent, meaningless codenames. Reverse-engineers find zero clues about your proprietary features or business logic.
+        </p>
+
+        <!-- DevTools Inspector Mockup (Cloaked / Protected) -->
+        <div class="devtools-window cloaked-window">
+          <div class="window-chrome">
+            <div class="window-dots">
+              <span class="dot dot-green-active"></span>
+              <span class="dot dot-amber"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="window-tab-bar">
+              <span class="tab">Console</span>
+              <span class="tab active-cloaked">Sources (Camouflaged)</span>
+              <span class="tab">Network</span>
+            </div>
+          </div>
+          <div class="window-body">
+            <div class="source-list">
+              <div class="source-item safe-item">
+                <span class="item-tag tag-cloaked">CLOAKED</span>
+                <span class="file-path">/build/assets/<strong class="camo-name">swift-tiger</strong>-C9x0a.js</span>
+                <span class="flag-desc flag-safe">Zero feature intent leaked</span>
+              </div>
+              <div class="source-item safe-item">
+                <span class="item-tag tag-cloaked">CLOAKED</span>
+                <span class="file-path">/build/assets/<strong class="camo-name">amber-harbor</strong>-A1b2c.js</span>
+                <span class="flag-desc flag-safe">License checks completely hidden</span>
+              </div>
+              <div class="source-item safe-item">
+                <span class="item-tag tag-cloaked">CLOAKED</span>
+                <span class="file-path">/build/assets/<strong class="camo-name">silent-falcon</strong>-D3e4f.js</span>
+                <span class="flag-desc flag-safe">Anti-tamper hooks invisible</span>
+              </div>
+              <div class="source-item safe-item">
+                <span class="item-tag tag-cloaked">CLOAKED</span>
+                <span class="file-path">/build/assets/<strong class="camo-name">neon-panther</strong>-E5g6h.js</span>
+                <span class="flag-desc flag-safe">Fraud heuristics undetectable</span>
+              </div>
+            </div>
+          </div>
+          <div class="window-footer success-footer">
+            <span>🛡️ 100% intent concealed &bull; Laravel Blade calls unchanged &bull; 0ms runtime drag</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: THE SOLUTION (INTERACTIVE TRANSFORMATION) -->
+    <section class="section solution-section" id="solution">
+      <div class="container">
+        <div class="section-label">HOW IT WORKS</div>
+        <h2 class="bold-headline">
+          HIDE SENSITIVE ASSET NAMES. <br>
+          <span class="hl-red">ZERO BLADE CHANGES.</span>
+        </h2>
+        <p class="section-desc">
+          Keep writing your normal <code>@vite(...)</code> tags. When you build for production, Tyro Camo automatically disguises sensitive bundle names into harmless codenames behind the scenes.
+        </p>
+
+        <!-- Interactive Camo Transformer -->
+        <div class="interactive-card" id="interactive-lab">
+          <div class="card-header">
+            <div class="card-title-wrap">
+              <span class="indicator-live"></span>
+              <h3>Live Camouflage Transformer</h3>
+            </div>
+            <div class="preset-selector">
+              <span>Quick Preset:</span>
+              <button class="preset-btn active" data-preset="drm">Video DRM</button>
+              <button class="preset-btn" data-preset="license">SaaS License</button>
+              <button class="preset-btn" data-preset="fraud">Fintech Fraud</button>
+            </div>
+          </div>
+
+          <div class="camo-grid">
+            <div class="camo-panel exposed-panel">
+              <div class="panel-tag tag-bad">In your Blade view</div>
+              <div class="panel-code">
+                <span class="code-comment">// resources/views/dashboard.blade.php</span>
+                <code class="code-highlight" id="blade-preview">@vite('resources/js/player-drm.js')</code>
+              </div>
+              <div class="output-preview">
+                <span class="preview-label">Standard Vite would produce:</span>
+                <code class="striked-output" id="standard-output">assets/player-drm-C9x0a.js</code>
+              </div>
+            </div>
+
+            <div class="camo-arrow">
+              <div class="camo-pill">TYRO CAMO</div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </div>
+
+            <div class="camo-panel stealth-panel">
+              <div class="panel-tag tag-good">What visitors see in DevTools</div>
+              <div class="panel-code">
+                <span class="code-comment">// public/build/manifest.json</span>
+                <code class="code-highlight" id="manifest-preview">"file": "assets/swift-tiger-C9x0a.js"</code>
+              </div>
+              <div class="output-preview">
+                <span class="preview-label">Final HTML script tag:</span>
+                <code class="cloaked-output" id="cloaked-output">&lt;script src="/build/assets/swift-tiger-C9x0a.js"&gt;</code>
+              </div>
+            </div>
+          </div>
+
+          <div class="camo-controls">
+            <button class="btn-rotate" id="reroll-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Try Another Name
+            </button>
+            <span class="seed-text">Build Seed: <strong id="seed-name">v1-alpha-seed</strong></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: DEEP DIVE FEATURES -->
+    <section class="section features-section" id="features">
+      <div class="container">
+        <div class="section-label">ENTERPRISE READINESS</div>
+        <h2 class="bold-headline">
+          BUILT FOR HIGH-STAKES <br>
+          <span class="hl-white">PRODUCTION LARAVEL APPS</span>
+        </h2>
+
+        <p class="section-desc">
+          Engineered for production resilience. No blind build steps, no broken blade templates, no workflow friction.
+        </p>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="card-top">
+              <div class="card-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
+              <span class="feat-tag">SCANNER</span>
+            </div>
+            <h3>Blade Auto-Discovery</h3>
+            <p>Scans every Blade view recursively for <code>@vite</code> calls so secondary entrypoints never crash production builds.</p>
+            <div class="card-footer-pill">
+              <span class="status-indicator"></span>
+              <span>100% template coverage</span>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="card-top">
+              <div class="card-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <path d="M9 12l2 2 4-4"></path>
+                </svg>
+              </div>
+              <span class="feat-tag">AUDIT TRAIL</span>
+            </div>
+            <h3>Auditable Legends</h3>
+            <p>Generates an internal <code>.camo-legend.json</code> during CI so your engineering team can always map codenames back to source code.</p>
+            <div class="card-footer-pill">
+              <span class="status-indicator"></span>
+              <span>Private &bull; CI/CD native</span>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="card-top">
+              <div class="card-icon-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6m2-6h6m2 8h6"></path>
+                </svg>
+              </div>
+              <span class="feat-tag">STRATEGY</span>
+            </div>
+            <h3>Deterministic Codenames</h3>
+            <p>Switch between mnemonic codenames (<code>swift-tiger</code>), silent hashes, or supply your own custom brand dictionaries.</p>
+            <div class="card-footer-pill">
+              <span class="status-indicator"></span>
+              <span>Reproducible builds</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: ONE-MINUTE CONFIG -->
+    <section class="section config-section" id="quickstart">
+      <div class="container">
+        <div class="section-label">ZERO-FRICTION INTEGRATION</div>
+        <h2 class="bold-headline">
+          ADD ONE LINE <br>
+          <span class="hl-red">TO VITE.CONFIG.JS</span>
+        </h2>
+        <p class="section-desc">
+          Zero changes to your Blade files, build files, or Rollup pipeline. Just register the plugin and everything else is handled automatically behind the scenes.
+        </p>
+
+        <div class="code-box">
+          <div class="code-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-amber"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="file-name">vite.config.js</span>
+            <button class="copy-btn-sm" id="copy-config-btn">Copy Config</button>
+          </div>
+          <pre><code id="code-snippet"><span class="token-keyword">import</span> { defineConfig } <span class="token-keyword">from</span> <span class="token-string">'vite'</span>;
+<span class="token-keyword">import</span> laravel <span class="token-keyword">from</span> <span class="token-string">'laravel-vite-plugin'</span>;
+<span class="token-highlight-line"><span class="token-keyword">import</span> { <span class="token-brand-red">tyroCamo</span> } <span class="token-keyword">from</span> <span class="token-string">'vite-plugin-tyro-camo'</span>;</span>
+
+<span class="token-keyword">export default</span> <span class="token-function">defineConfig</span>({
+  <span class="token-property">plugins</span>: [
+    <span class="token-function">laravel</span>({
+      <span class="token-property">input</span>: [<span class="token-string">'resources/css/app.css'</span>, <span class="token-string">'resources/js/app.js'</span>],
+      <span class="token-property">refresh</span>: <span class="token-boolean">true</span>,
+    }),
+    <span class="token-highlight-line">    <span class="token-brand-red">tyroCamo</span>(), <span class="token-comment">// &lt;-- Zero Blade changes. Zero build tweaks.</span></span>
+  ],
+});</code></pre>
+        </div>
+
+        <div class="config-note">
+          <span class="note-badge">FULLY AUTOMATED</span>
+          <span>Zero Blade edits, no Rollup overrides, no manual manifest patching. Your build commands (<code>npm run build</code>) run identically as before.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: GRANULAR NAMING CONTROL -->
+    <section class="section strategy-section" id="strategies">
+      <div class="container">
+        <div class="section-label">TOTAL CONTROL</div>
+        <h2 class="bold-headline">
+          CHOOSE YOUR <br>
+          <span class="hl-white">FILE NAMING STRATEGY</span>
+        </h2>
+        <p class="section-desc">
+          Want fixed aliases for key scripts, or prefer silent cryptographic hashes for everything else? Configure how unmapped assets are named with <code>unmappedStrategy</code>.
+        </p>
+
+        <div class="strategy-cards-grid">
+          <div class="strategy-card active-strat">
+            <div class="strategy-header">
+              <span class="strat-title"><code>'codename'</code></span>
+              <span class="strat-pill default-pill">Default</span>
+            </div>
+            <p class="strat-desc">Generates pronounceable, innocuous adjective-noun pairs from built-in or custom dictionaries.</p>
+            <div class="strat-example">
+              <span class="example-label">Output example:</span>
+              <code>assets/swift-tiger-C9x0a.js</code>
+            </div>
+          </div>
+
+          <div class="strategy-card">
+            <div class="strategy-header">
+              <span class="strat-title"><code>'nameless'</code></span>
+              <span class="strat-pill">Silent</span>
+            </div>
+            <p class="strat-desc">Strips all descriptive identifiers and codenames, leaving only pure content hashes.</p>
+            <div class="strat-example">
+              <span class="example-label">Output example:</span>
+              <code>assets/C9x0a4f8.js</code>
+            </div>
+          </div>
+
+          <div class="strategy-card">
+            <div class="strategy-header">
+              <span class="strat-title"><code>'preserve'</code></span>
+              <span class="strat-pill">Selective</span>
+            </div>
+            <p class="strat-desc">Leaves unmapped files with their original names while keeping explicit <code>aliases</code> camouflaged.</p>
+            <div class="strat-example">
+              <span class="example-label">Output example:</span>
+              <code>assets/app-B3e9x.js</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="strategy-snippet-box">
+          <pre><code><span class="token-comment">// Customize how non-aliased assets are emitted:</span>
+<span class="token-function">tyroCamo</span>({
+  <span class="token-comment">// Options: 'codename' | 'nameless' | 'preserve'</span>
+  <span class="token-property">unmappedStrategy</span>: <span class="token-string">'codename'</span>,
+  <span class="token-property">format</span>: <span class="token-string">'assets/[codename]-[hash][extname]'</span>,
+})</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CALL TO ACTION -->
+    <section class="cta-section">
+      <div class="container">
+        <div class="cta-inner">
+          <h2 class="cta-headline">
+            STOP EXPOSING INTENT. <br>
+            START CAMOUFLAGING.
+          </h2>
+          <p class="cta-sub">
+            Free and open-source for modern Laravel and Vite developers.
+          </p>
+          <div class="cta-actions">
+            <div class="terminal-install-bar small-bar" id="install-cta-trigger">
+              <span class="cmd-prompt">$</span>
+              <span class="cmd-text">npm i vite-plugin-tyro-camo --save-dev</span>
+            </div>
+            <a href="https://github.com/hasinhayder/tyro-camo" class="btn-outline" target="_blank" rel="noopener">
+              View on GitHub &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-left">
+        <span class="footer-brand">TYRO<strong>CAMO</strong></span>
+        <span class="footer-sub">Stealth asset camouflage for Laravel &amp; Vite</span>
+      </div>
+      <div class="footer-right">
+        <span>Open Source MIT License &bull; Built with precision for production teams</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
