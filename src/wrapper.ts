@@ -113,9 +113,14 @@ const SCRIPT_EXTENSIONS = new Set(['js', 'mjs', 'cjs', 'jsx', 'ts', 'tsx', 'vue'
  * Rollup emits JavaScript for every chunk, so a chunk is camouflaged whenever any script extension
  * is targeted - even though its `name` has no extension. Assets are classified by their real
  * extension so fonts, images and other custom pipelines keep delegating to the user's handler.
+ *
+ * The `kind` argument is authoritative: it comes from the naming hook that Vite invoked
+ * (`entryFileNames` / `chunkFileNames` / `assetFileNames`). Rolldown-based Vite (Vite 8+) does not
+ * set `info.type`, so sniffing it from the info object silently misclassifies every JS chunk as an
+ * asset there - which, since chunk names carry no extension, left all JavaScript uncamouflaged.
  */
-function isTargeted(info: OutputPatternInfo, include: Set<string>): boolean {
-  if (info.type === 'chunk') {
+function isTargeted(kind: Kind, info: OutputPatternInfo, include: Set<string>): boolean {
+  if (kind === 'entry' || kind === 'chunk') {
     for (const extension of include) if (SCRIPT_EXTENSIONS.has(extension)) return true;
     return false;
   }
@@ -152,7 +157,7 @@ function wrap(pattern: Pattern | undefined, kind: Kind, options: WrapperOptions)
     // Answer Vite's internal directory probe with the untouched pattern: no codename is resolved
     // and nothing is recorded, while the caller still gets the directory it asked for.
     if (isViteInternalCall(info)) return original ?? fallback;
-    if (!isTargeted(info, include)) return original ?? fallback;
+    if (!isTargeted(kind, info, include)) return original ?? fallback;
 
     const source = identityOf(info, options);
     // Aliases are exact, project-root-relative source paths. A partial or basename-only key

@@ -112,6 +112,26 @@ describe('wrapper', () => {
     expect(cssOnly.entryFileNames(ts)).not.toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\.js$/);
   });
 
+  it('targets chunks by hook kind, even when info.type is missing (Rolldown/Vite 8)', () => {
+    // Regression: Rolldown-based Vite (Vite 8+) omits `type` from the info object passed to
+    // naming hooks, which used to misroute every JS chunk into the asset branch - and since
+    // chunk names carry no extension, all JavaScript silently kept its original filename.
+    const rolldownEntry = {
+      name: 'loan-calculator',
+      facadeModuleId: `${process.cwd()}/resources/js/loan-calculator.js`,
+      moduleIds: [`${process.cwd()}/resources/js/loan-calculator.js`],
+    };
+    const output = wrapOutput({}, createOptions()) as any;
+
+    expect(output.entryFileNames(rolldownEntry)).toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\.js$/);
+    expect(output.entryFileNames(rolldownEntry)).not.toContain('loan-calculator');
+    expect(output.chunkFileNames({ name: 'shared' })).toMatch(/^assets\/[a-z]+-[a-z]+-\[hash\]\.js$/);
+
+    // Non-code assets still bypass cloaking under the same kind-based classification.
+    expect(output.assetFileNames({ name: 'font.woff2', originalFileName: 'resources/fonts/font.woff2' }))
+      .toBe('assets/[name]-[hash][extname]');
+  });
+
   it('targets assets by their real extension regardless of script extensions', () => {
     const output = wrapOutput({}, createOptions({ include: ['js', 'ts', 'css'] })) as any;
 
