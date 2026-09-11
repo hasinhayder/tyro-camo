@@ -8,6 +8,16 @@ Stealth asset camouflage for Laravel & Vite. Cloak and camouflage compiled front
 
 ---
 
+## Installation
+
+```bash
+npm install vite-plugin-tyro-camo --save-dev
+```
+
+> **Requirements:** Vite `>= 5.0.0` • Node.js `>= 18.0.0` • Works seamlessly with `laravel-vite-plugin`.
+
+---
+
 ## What Problem Does This Solve?
 
 Imagine you build a Laravel website with special features—such as a video player for paying subscribers, a license verification script, an anti-tamper guard, or a proprietary algorithm.
@@ -45,18 +55,6 @@ It automatically disguises sensitive bundle filenames under innocent, human-frie
 - ✅ **Laravel stays 100% happy:** `manifest.json` keeps the original keys mapped correctly.
 - ✅ **Browsers & ad-blockers see ordinary names:** The bundles look like ordinary, harmless third-party libraries.
 - ✅ **Completely automated:** Drop it into `vite.config.js` and you're done.
-
----
-
-## Installation
-
-```bash
-npm install vite-plugin-tyro-camo --save-dev
-```
-
-> **Requirements:** Vite `>= 5.0.0` • Node.js `>= 18.0.0` • Works seamlessly with `laravel-vite-plugin`.
-
----
 
 ## Basic Setup
 
