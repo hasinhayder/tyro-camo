@@ -186,4 +186,4 @@ never mistake a bypassed name for a camouflaged one:
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+MIT License © 2026 [Hasin Hayder](https://github.com/hasinhayder)
